@@ -24,7 +24,6 @@ data ScriptState = ScriptState { output :: String
 -- command’s execution.
 runHashProgram :: CommandTable -> Either FilePath ScriptState -> [TLExpr] -> IO ScriptState
 runHashProgram ct (Left fp) exprs = runHashProgram ct (Right (ScriptState "" fp M.empty)) exprs
-runHashProgram _ (Left fp) [] = return (ScriptState "" fp M.empty)
 runHashProgram _ (Right ss) [] = return ss
 runHashProgram ct (Right ss) (topExpr:exprs) = do
 	newSS <- runTopLevel ct ss topExpr
