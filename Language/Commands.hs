@@ -5,12 +5,13 @@ import qualified Data.List as L
 import Data.Char (toLower, intToDigit, ord)
 import Language.Exec
 import Data.Maybe
+import System.IO
 import System.Directory
 import System.FilePath
 import Numeric
 
 commandList :: M.Map String Command
-commandList = M.fromList [("hexdump", hexdump), ("cat", cat), ("pwd", pwd), ("echo", echo), ("cp", cp), ("cd", cd), ("ls", ls), ("grep", grep) ,("", retSame)]
+commandList = M.fromList [("create", create), ("rm", rm), ("mv", mv), ("hexdump", hexdump), ("cat", cat), ("pwd", pwd), ("echo", echo), ("cp", cp), ("cd", cd), ("ls", ls), ("grep", grep) ,("", retSame)]
 
 pwd :: Command
 pwd _ ss@(ScriptState _ workDir _) = return $ ss {output = workDir}
@@ -28,7 +29,21 @@ cp :: Command
 cp [_] _ = error "Too few arguments"
 cp [] _  = error "Too few arguments"
 cp lst ss@(ScriptState _ workDir _) = (mapM_ cpHelp $ zip (init lst) (repeat $ last lst)) >> return ss
-	where cpHelp (frm, src) = (copyFile (workDir </> frm) (workDir </> src))
+	where cpHelp (frm, src) = do
+		dir <- doesDirectoryExist src
+		case dir of
+			True ->  copyFile (workDir </> frm) (workDir </> src </> frm)
+			False ->  readFile frm >>= withFile src WriteMode . flip hPutStr
+
+mv :: Command
+mv (src:dst:_) ss = cp [src,dst] ss >> removeFile src >> return ss
+mv _ _ = error "Not enough arguments"
+
+rm :: Command
+rm lst ss = mapM_ removeFile lst >> return ss
+
+create :: Command
+create lst ss = mapM (flip openFile WriteMode) lst >>= mapM_ hClose >> return ss
 
 cd :: Command
 cd [] ss = getHomeDirectory >>= return . (\x -> ss {wd = x})

@@ -12,7 +12,7 @@ The task of this project is to implement **Hash**, a simple shell programmed in 
 - [ ] Basic Functionality (*80 %*)
     - [x] Abstracted command calling (*2 pts*)
     - [ ] Conditional branching (*6 pts*)
-    - [ ] File manipulation (*3 pts*)
+    - [x] File manipulation (*3 pts*)
     - [ ] Directory manipulation (*3 pts*)
     - [x] Filesystem navigation (*3 pts*)
     - [x] Stream redirection (*5 pts*)
