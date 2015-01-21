@@ -1,0 +1,5 @@
+echo "hello world";
+echo "hello world" > d.txt;
+echo < a.txt >> d.txt;
+ls Parsing;
+grep -i -v HeLlo d.txt;

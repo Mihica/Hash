@@ -81,6 +81,7 @@ grep lst ss@(ScriptState _ _ _) = do
 		resolveC x = if c then [show $ length x] else x
 
 hexdump :: Command
-hexdump (f:_) ss = readFile f >>= return . map (L.intercalate " " . map intToHex) . lines >>= (\x -> return ss{output = unlines x})
+hexdump (f:_) ss@(ScriptState _ workDir _) = (readFile $ workDir </> f) >>= return . map (L.intercalate " " . map intToHex) . lines >>= (\x -> return ss{output = unlines x})
 	where intToHex x = showIntAtBase 16 intToDigit (ord x) ""
+
 hexdump _ _ = error "too few arguments"

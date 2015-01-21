@@ -17,21 +17,26 @@ data ScriptState = ScriptState { output :: String
 , wd :: FilePath
 , vartable :: VarTable
 } deriving Show
+
 -- Runs a set of commands for a given command table. If this is the first
 -- command in the chain, it is given a FilePath and constructs a new, initially
 -- blank, ScriptState. Otherwise, it is given the state as left by the previous
 -- command’s execution.
-
--- runHashProgram :: CommandTable -> Either FilePath ScriptState -> [TLExpr] -> IO ScriptState
+runHashProgram :: CommandTable -> Either FilePath ScriptState -> [TLExpr] -> IO ScriptState
+runHashProgram ct (Left fp) exprs = runHashProgram ct (Right (ScriptState "" fp M.empty)) exprs
+runHashProgram _ (Left fp) [] = return (ScriptState "" fp M.empty)
+runHashProgram _ (Right ss) [] = return ss
+runHashProgram ct (Right ss) (topExpr:exprs) = do
+	newSS <- runTopLevel ct ss topExpr
+	runHashProgram ct (Right newSS) exprs
 
 -- Calculates the result of a top-level command execution
-runTopLevel :: CommandTable -> ScriptState -> [TLExpr] -> IO ScriptState
-runTopLevel ct ss ((TLCmd cmd):rest) = do
+runTopLevel :: CommandTable -> ScriptState -> TLExpr -> IO ScriptState
+runTopLevel ct ss (TLCmd cmd) = do
 	newSS <- executeCommand cmd ct ss
-	finalSS <- runTopLevel ct newSS rest
-	return finalSS
+	return newSS
 
-runTopLevel _ ss [] = return ss
+runTopLevel _ _ _ = undefined
 
 vtLookup ::VarTable -> Expr -> String
 vtLookup _ (Str s) = s
@@ -47,8 +52,8 @@ executeCommand (Cmd cmdName argums input out isApp) ct ss@(ScriptState _ _ vt) =
 	let cmdName' = getExpr cmdName
 	let cmd = fromMaybe (error ("command " ++ cmdName' ++ " does not exist\n")) $ M.lookup cmdName' ct
 	fromFile <- maybe (return []) readFile (fmap getExpr input)
-	newSs <- cmd ((map getExpr argums) ++ (if fromFile == "" then [] else [fromFile])) ss
-	if (isNothing out) then putStrLn $ output newSs else ((if isApp then appendFile else writeFile) (getExpr $ fromJust out) $ output newSs)
-	return newSs
+	newSS <- cmd ((map getExpr argums) ++ (if fromFile == "" then [] else [fromFile])) ss
+	if (isNothing out) then putStrLn $ output newSS else ((if isApp then appendFile else writeFile) (getExpr $ fromJust out) $ output newSS)
+	return newSS
 
 executeCommand (Assign varName value) _ ss@(ScriptState _ _ vt) = return ss{vartable = M.insert (varValToStr varName) (varValToStr value) vt}

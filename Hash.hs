@@ -4,18 +4,14 @@ import System.Directory
 import Parsing.HashParser (parseStart)
 import Language.Exec
 import Language.Commands
-import qualified Data.Map as M
+import System.IO
 
-runInline :: IO ()
-runInline = do
+run :: Handle -> IO ()
+run h = do
 	putStrLn "Welcome to Hash"
-	run
-
-run :: IO ()
-run = do
-	input <- readLn --getContents better
+	input <- hGetContents h
 	let exprs = parseStart input
 	workDir <- getCurrentDirectory
 	print exprs
-	finalScriptState <- runTopLevel commandList (ScriptState "" workDir M.empty) exprs
+	finalScriptState <- runHashProgram commandList (Left workDir) exprs
 	putStrLn ""

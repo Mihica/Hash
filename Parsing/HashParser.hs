@@ -52,7 +52,7 @@ multiLine :: Parser String
 multiLine = (string "/*") *> (manyTill anyChar $ try (string "*/"))
 
 stringLiteral :: Parser Expr
-stringLiteral = char '"' *> (many1 $ noneOf "/*=<>\n\";") <* char '"' >>= return . Str
+stringLiteral = char '"' *> (many1 $ noneOf "\"") <* char '"' >>= return . Str
  
 expr :: Parser Expr
 expr = try (parseString >>= return . Str)
