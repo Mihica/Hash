@@ -12,6 +12,6 @@ run h = do
 	input <- hGetContents h
 	let exprs = parseStart input
 	workDir <- getCurrentDirectory
-	print exprs
+	-- print exprs
 	finalScriptState <- runHashProgram commandList (Left workDir) exprs
 	putStrLn ""
